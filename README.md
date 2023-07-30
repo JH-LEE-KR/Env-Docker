@@ -51,8 +51,8 @@ docker run --rm -it --gpus all env/gpu
 
 The arguments below can be changed:
 ```
-FROM  nvidia/cuda:11.7.1-cudnn8-devel-ubuntu20.04
-FROM  ubuntu:20.04
+FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu20.04
+FROM ubuntu:20.04
 ARG PYTORCH='1.13.0'
 ARG TORCH_VISION='0.14.0'
 ARG TORCH_AUDIO='0.13.0'
