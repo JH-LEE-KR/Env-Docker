@@ -1,0 +1,52 @@
+# Dockerfile
+FROM  ubuntu:20.04
+
+LABEL name="Jaeho Lee"
+LABEL email="dlwogh9344@khu.ac.kr"
+
+# Disable interactive prompts from Apt
+ARG DEBIAN_FRONTEND=noninteractive
+
+ENV TZ=Asia/Seoul
+ENV TERM=xterm-256color
+
+SHELL ["/bin/bash", "-c"]
+
+# Update apt & install packages
+RUN sed -i "s/archive.ubuntu.com/mirror.kakao.com/g" /etc/apt/sources.list
+RUN apt-get update \
+  && apt-get install -y libgl1-mesa-glx \
+  && apt-get install -y ffmpeg \
+  && apt-get install -y libsm6 \
+  && apt-get install -y libxext6 \
+  && apt-get install -y build-essential \
+  && apt-get install -y wget \
+  && apt-get install -y git \
+  && apt-get install -y vim \
+  && apt-get install -y unzip \
+  && apt-get install -y tar \
+  && apt install -y python3.8 \
+  && apt install -y python3-pip \
+  && ln -s /usr/bin/python3.8 /usr/bin/python \
+  && python -m pip install --no-cache-dir --upgrade pip
+
+# If set to nothing, will install the latest version
+ARG TENSORFLOW='2.12'
+
+RUN [ ${#TENSORFLOW} -gt 0 ] && VERSION='tensorflow=='$TENSORFLOW'.*' ||  VERSION='tensorflow'; python -m pip install --no-cache-dir -U $VERSION
+RUN python -m pip uninstall -y jax flax
+
+# Install zsh, oh-my-zsh, p10k, zsh plugins
+RUN apt-get install -y zsh \
+  && chsh -s $(which zsh) \
+  && sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
+  && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k \
+  && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting \
+  && git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
+COPY .zshrc \
+    .p10k.zsh \
+    /root/
+
+
+CMD ["zsh"]
