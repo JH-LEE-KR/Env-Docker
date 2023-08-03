@@ -12,13 +12,6 @@ ENV TERM=xterm-256color
 ARG TARGETARCH
 SHELL ["/bin/bash", "-c"]
 
-RUN useradd -m -s /bin/bash jaeho \
-    && echo "jaeho:1234" | chpasswd \
-    && usermod -aG sudo jaeho \
-    && mkdir /home/jaeho/.ssh \
-    && chown -R jaeho.jaeho /home/jaeho \
-    && chmod -R 755 /home/jaeho
-
 # Update apt & install packages
 RUN sed -i "s/archive.ubuntu.com/mirror.kakao.com/g" /etc/apt/sources.list
 RUN apt-get update \
