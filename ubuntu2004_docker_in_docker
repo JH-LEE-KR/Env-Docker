@@ -1,0 +1,66 @@
+# Dockerfile
+FROM  ubuntu:20.04
+
+LABEL name="Jaeho Lee"
+LABEL email="dlwogh9344@khu.ac.kr"
+
+# Disable interactive prompts from Apt
+ARG DEBIAN_FRONTEND=noninteractive
+
+ENV TZ=Asia/Seoul
+ENV TERM=xterm-256color
+ARG TARGETARCH
+SHELL ["/bin/bash", "-c"]
+
+RUN useradd -m -s /bin/bash jaeho \
+    && echo "jaeho:1234" | chpasswd \
+    && usermod -aG sudo jaeho \
+    && mkdir /home/jaeho/.ssh \
+    && chown -R jaeho.jaeho /home/jaeho \
+    && chmod -R 755 /home/jaeho
+
+# Update apt & install packages
+RUN sed -i "s/archive.ubuntu.com/mirror.kakao.com/g" /etc/apt/sources.list
+RUN apt-get update \
+  && apt-get install -y wget \
+  && apt-get install -y sudo \
+  && apt-get install -y git \
+  && apt-get install -y vim \
+  && apt-get install -y apt-transport-https \
+  && apt-get install -y ca-certificates \
+  && apt-get install -y curl \
+  && apt-get install -y gnupg \
+  && apt-get install -y lsb-release \
+  && apt-get install -y software-properties-common \
+  && apt install -y python3.8 \
+  && apt install -y python3-pip \
+  && ln -s /usr/bin/python3.8 /usr/bin/python \
+  && python -m pip install --no-cache-dir --upgrade pip
+
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+RUN add-apt-repository \
+    "deb [arch=$TARGETARCH] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) \
+    stable"
+
+RUN apt-get install -y docker-ce \
+    && apt-get install -y docker-ce-cli \
+    && apt-get install -y containerd.io
+
+RUN /bin/bash -c 'echo -e "{\n \"iptables\": false\n}" > /etc/docker/daemon.json'
+
+# Install zsh, oh-my-zsh, p10k, zsh plugins
+RUN apt-get install -y zsh \
+  && chsh -s $(which zsh) \
+  && sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
+  && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k \
+  && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting \
+  && git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
+COPY .zshrc \
+    .p10k.zsh \
+    init.sh \
+    /root/
+
+RUN chmod +x /root/init.sh
+ENTRYPOINT ["/root/init.sh"]
