@@ -6,10 +6,12 @@ LABEL email="dlwogh9344@khu.ac.kr"
 
 # Disable interactive prompts from Apt
 ARG DEBIAN_FRONTEND=noninteractive
+# For identify the build architecture (arm64 or amd64)
+ARG BUILDARCH 
 
 ENV TZ=Asia/Seoul
 ENV TERM=xterm-256color
-ARG TARGETARCH
+
 SHELL ["/bin/bash", "-c"]
 
 # Update apt & install packages
