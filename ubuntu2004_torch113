@@ -6,6 +6,8 @@ LABEL email="dlwogh9344@khu.ac.kr"
 
 # Disable interactive prompts from Apt
 ARG DEBIAN_FRONTEND=noninteractive
+# For identify the build architecture (arm64 or amd64)
+ARG BUILDARCH 
 
 ENV TZ=Asia/Seoul
 ENV TERM=xterm-256color
@@ -35,8 +37,31 @@ ARG PYTORCH='1.13.0'
 ARG TORCH_VISION='0.14.0'
 ARG TORCH_AUDIO='0.13.0'
 
-RUN [ ${#PYTORCH} -gt 0 ] && VERSION='torch=='$PYTORCH'.+cpu' ||  VERSION='torch'; python -m pip install --no-cache-dir -U $VERSION --extra-index-url https://download.pytorch.org/whl/cpu
-RUN [ ${#TORCH_VISION} -gt 0 ] && VERSION='torchvision=='$TORCH_VISION'.+cpu' ||  VERSION='torchvision'; python -m pip install --no-cache-dir -U $VERSION --extra-index-url https://download.pytorch.org/whl/cpu
+# Conditional installation of PyTorch, Torchvision for ARM64 (Apple Silicon)
+RUN \
+if [ ${#PYTORCH} -gt 0 ]; then \
+  if [ ${BUILDARCH} = 'arm64' ]; then \
+    VERSION='torch=='$PYTORCH; \
+  else \
+    VERSION='torch=='$PYTORCH'+cpu'; \
+  fi \
+else \
+  VERSION='torch'; \
+fi \
+&& python -m pip install --no-cache-dir -U $VERSION --extra-index-url https://download.pytorch.org/whl/cpu
+
+RUN \
+if [ ${#TORCH_VISION} -gt 0 ]; then \
+  if [ ${BUILDARCH} = 'arm64' ]; then \
+    VERSION='torchvision=='$TORCH_VISION; \
+  else \
+    VERSION='torchvision=='$TORCH_VISION'+cpu'; \
+  fi \
+else \
+  VERSION='torchvision'; \
+fi \
+&& python -m pip install --no-cache-dir -U $VERSION --extra-index-url https://download.pytorch.org/whl/cpu
+
 RUN [ ${#TORCH_AUDIO} -gt 0 ] && VERSION='torchaudio=='$TORCH_AUDIO'.*' ||  VERSION='torchaudio'; python -m pip install --no-cache-dir -U $VERSION --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Install zsh, oh-my-zsh, p10k, zsh plugins
